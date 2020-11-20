@@ -3,7 +3,7 @@ import imghdr
 import os
 import time
 
-from basicsr.utils.crawler_util import setup_session
+from handycrawler.crawler_util import setup_session
 
 try:
     import pymongo

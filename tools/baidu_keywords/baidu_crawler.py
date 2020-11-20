@@ -3,8 +3,8 @@ import time
 from datetime import datetime
 from urllib.parse import urlsplit
 
-from basicsr.utils import sizeof_fmt
-from basicsr.utils.crawler_util import baidu_decode_url, setup_session
+from handycrawler.crawler_util import (baidu_decode_url, setup_session,
+                                       sizeof_fmt)
 
 try:
     import pymongo
