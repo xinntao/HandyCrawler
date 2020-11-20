@@ -26,22 +26,23 @@ def main():
 
     with open('tools/baike_stars/baidu_stars_China_mainland_male_201118.txt',
               'r') as fin:
-        person_list = [line.strip().split(' ')[1] for line in fin]
+        person_list = [line.strip().split('/item')[1] for line in fin]
+
     for idx, person in enumerate(person_list):
-        encoded_name, person_id = person.split('/')[2], person.split('/')[3]
-        # parse
-        person_info = parse_albums(encoded_name, person_id, session)
-        print(f'{idx} / {len(person_list)} - {person_info["name"]}, '
-              f'num_album: {person_info["num_album"]}, '
-              f'num_photo: {person_info["num_photo"]}')
-        # add to mongodb
-        result = star_albums_col.find_one({'id': person_info['id']})
+        encoded_name, person_id = person.split('/')[1], person.split('/')[2]
+        result = star_albums_col.find_one({'id': person_id})
         if result is None:
+            # parse
+            person_info = parse_albums(encoded_name, person_id, session)
+            print(f'{idx} / {len(person_list)} - {person_info["name"]}, '
+                  f'num_album: {person_info["num_album"]}, '
+                  f'num_photo: {person_info["num_photo"]}')
+            # add to mongodb
             num_new_records += 1
             insert_rlt = star_albums_col.insert_one(person_info)
             print(f'\tInsert one record: {insert_rlt.inserted_id}')
         else:
-            print(f'\t{person_info["id"]} already exits.')
+            print(f'\t{person_id} already exits.')
             num_exist_records += 1
 
     print(f'New added records: {num_new_records}.\n'
