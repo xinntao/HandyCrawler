@@ -12,7 +12,8 @@ def main():
 
     """
     # configuration
-
+    star_list_path = 'tools/baike_stars/baidu_stars_China_mainland_female_201118.txt'  # noqa: E501
+    star_type = 'China Mainland Female'
     # Set up session
     session = setup_session()
 
@@ -24,8 +25,7 @@ def main():
     num_new_records = 0
     num_exist_records = 0
 
-    with open('tools/baike_stars/baidu_stars_China_mainland_male_201118.txt',
-              'r') as fin:
+    with open(star_list_path, 'r') as fin:
         person_list = [line.strip().split('/item')[1] for line in fin]
 
     for idx, person in enumerate(person_list):
@@ -39,6 +39,7 @@ def main():
                   f'num_photo: {person_info["num_photo"]}')
             # add to mongodb
             num_new_records += 1
+            person_info['type'] = star_type
             insert_rlt = star_albums_col.insert_one(person_info)
             print(f'\tInsert one record: {insert_rlt.inserted_id}')
         else:
@@ -129,8 +130,9 @@ def parse_albums(name, person_id, session, req_timeout=5, max_retry=3):
                     timeout=req_timeout,
                     headers={'Referer': url})
             except Exception as e:
-                print(f'Exception caught when fetching page {url}, '
-                      f'error: {e}, remaining retry times: {retry - 1}')
+                print(
+                    f'Exception caught when fetching page {album_cover_url}, '
+                    f'error: {e}, remaining retry times: {retry - 1}')
             else:
                 album_content = response.content.decode('utf-8',
                                                         'ignore').replace(
