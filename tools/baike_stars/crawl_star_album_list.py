@@ -4,7 +4,7 @@ import time
 from bs4 import BeautifulSoup
 from urllib.parse import unquote
 
-from handycrawler.crawler_util import setup_session, sizeof_fmt
+from handycrawler.crawler_util import get_content, setup_session, sizeof_fmt
 
 
 def main():
@@ -78,20 +78,7 @@ def parse_albums(name, person_id, session, req_timeout=5, max_retry=3):
     url = f'https://baike.baidu.com/pic/{name}/{person_id}'
     referer_url = 'https://baike.baidu.com'
 
-    retry = max_retry
-    while retry > 0:
-        try:
-            response = session.get(
-                url, timeout=req_timeout, headers={'Referer': referer_url})
-        except Exception as e:
-            print(f'Exception caught when fetching page {url}, '
-                  f'error: {e}, remaining retry times: {retry - 1}')
-        else:
-            content = response.content.decode('utf-8',
-                                              'ignore').replace("\\'", "'")
-            break
-        finally:
-            retry -= 1
+    content = get_content(session, url, referer_url, req_timeout, max_retry)
 
     soup = BeautifulSoup(content, 'html.parser')
 
@@ -122,24 +109,8 @@ def parse_albums(name, person_id, session, req_timeout=5, max_retry=3):
                                         {'class': 'pic album-cover'})['href']
         album_cover_url = 'https://baike.baidu.com' + album_cover_href
 
-        retry = max_retry
-        while retry > 0:
-            try:
-                response = session.get(
-                    album_cover_url,
-                    timeout=req_timeout,
-                    headers={'Referer': url})
-            except Exception as e:
-                print(
-                    f'Exception caught when fetching page {album_cover_url}, '
-                    f'error: {e}, remaining retry times: {retry - 1}')
-            else:
-                album_content = response.content.decode('utf-8',
-                                                        'ignore').replace(
-                                                            "\\'", "'")
-                break
-            finally:
-                retry -= 1
+        album_content = get_content(session, album_cover_url, url, req_timeout,
+                                    max_retry)
 
         soup_album = BeautifulSoup(album_content, 'html.parser')
         # parse album page

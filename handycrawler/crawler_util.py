@@ -48,3 +48,21 @@ def setup_session():
     session = requests.Session()
     session.headers.update(headers)
     return session
+
+
+def get_content(session, url, referer_url, req_timeout=5, max_retry=3):
+    retry = max_retry
+    while retry > 0:
+        try:
+            response = session.get(
+                url, timeout=req_timeout, headers={'Referer': referer_url})
+        except Exception as e:
+            print(f'Exception caught when fetching page {url}, '
+                  f'error: {e}, remaining retry times: {retry - 1}')
+        else:
+            content = response.content.decode('utf-8',
+                                              'ignore').replace("\\'", "'")
+            break
+        finally:
+            retry -= 1
+    return content
