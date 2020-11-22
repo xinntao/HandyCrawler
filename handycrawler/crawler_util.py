@@ -1,3 +1,4 @@
+import imghdr
 import requests
 
 
@@ -66,3 +67,43 @@ def get_content(session, url, referer_url, req_timeout=5, max_retry=3):
         finally:
             retry -= 1
     return content
+
+
+def get_img_content(session,
+                    file_url,
+                    extension=None,
+                    max_retry=3,
+                    req_timeout=5):
+    """
+    Returns:
+        (data, actual_ext)
+    """
+    retry = max_retry
+    while retry > 0:
+        try:
+            response = session.get(file_url, timeout=req_timeout)
+        except Exception as e:
+            print(f'Exception caught when downloading file {file_url}, '
+                  f'error: {e}, remaining retry times: {retry - 1}')
+        else:
+            if response.status_code != 200:
+                print(f'Response status code {response.status_code}, '
+                      f'file {file_url}')
+                break
+
+            # get the response byte
+            data = response.content
+            if isinstance(data, str):
+                print('Converting str to byte, later remove it.')
+                data = data.encode(data)
+            actual_ext = imghdr.what(extension, data)
+            actual_ext = 'jpg' if actual_ext == 'jpeg' else actual_ext
+            # do not download original gif
+            if actual_ext == 'gif' or actual_ext is None:
+                return None, actual_ext
+
+            return data, actual_ext
+        finally:
+            retry -= 1
+
+    return None, None
